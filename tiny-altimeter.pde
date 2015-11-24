@@ -34,7 +34,8 @@ extern uint8_t Symbol[];
 extern uint8_t Spash[];
 
 SFE_BMP180 pressure;
-Button button1 = Button(BUTTON1_PIN,BUTTON_PULLDOWN);
+digitalWrite(BUTTON1_PIN, HIGH);//enable internal pullup
+Button button1 = Button(BUTTON1_PIN,BUTTON_PULLUP);
 boolean longPush = false;
 int value, etat = 0;
 double QNH, saveQNH;
@@ -203,7 +204,7 @@ void loop() {
 }
 /* -------------------- fonctions --------------------  */
 
-// Affiche les données d'un ecran
+// Affiche les donnÃ©es d'un ecran
 void showScreen(String label, double value, int unit) {
   display.clearDisplay(); 
   display.setCursor(0,0);
@@ -238,7 +239,7 @@ void setAltiMinMax() {
 void resetAltiMinMax() {
   altiMax = altiMin = altitude;
 }
-// Gestion du bouton relaché
+// Gestion du bouton relachÃ©
 void handleButtonReleaseEvents(Button &btn) {
   //debugMsg = "Release";
   if (!longPush) {
@@ -255,7 +256,7 @@ void handleButtonReleaseEvents(Button &btn) {
   longPush = false;
 }
 
-// Gestion de l'appui prolongé sur le bouton
+// Gestion de l'appui prolongÃ© sur le bouton
 void handleButtonHoldEvents(Button &btn) {
   //debugMsg = "Hold";
   longPush = true;
@@ -270,7 +271,7 @@ void handleButtonHoldEvents(Button &btn) {
   }
 }
 
-// Affiche un caractére en x, y
+// Affiche un caractÃ©re en x, y
 void drawCar(int sx, int sy, int num, uint8_t *font, int fw, int fh, int color) {
   byte row;
   for(int y=0; y<fh; y++) {
@@ -283,7 +284,7 @@ void drawCar(int sx, int sy, int num, uint8_t *font, int fw, int fh, int color) 
   }
 }
 
-// Affiche un gros caractére en x, y
+// Affiche un gros caractÃ©re en x, y
 void drawBigCar(int sx, int sy, int num) {
   drawCar(sx, sy, num, Font24x40, 24, 40, WHITE) ;
 }
