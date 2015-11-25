@@ -19,10 +19,12 @@
 #define DHT11_PIN     2
 
 
-#define HPA 0
-#define METER 1
-#define DEG 2
-#define MVOLT 3
+#define SYMBOL_HPA 0
+#define SYMBOL_METER 1
+#define SYMBOL_DEG 2
+#define SYMBOL_MVOLT 3
+#define SYMBOL_UP 4
+#define SYMBOL_DOWN 5
 #define SYMBOL_PERCENT 6
 
 Adafruit_SSD1306 display(OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
@@ -148,35 +150,35 @@ void loop() {
     switch (screen) {
     case 1: // Altitude
       if (lastValue != altitude) {
-        showScreen("ALTITUDE", altitude, METER);
+        showScreen("ALTITUDE", altitude, SYMBOL_METER);
         lastValue = altitude;
       }  
       break;
 
     case 2: // Altitude Max
       if (lastValue != altiMax) {
-        showScreen("ALTITUDE MAX", altiMax, METER);
+        showScreen("ALTITUDE MAX", altiMax, SYMBOL_METER);
         lastValue = altiMax;
       }  
       break;
 
     case 3:  // Altitude Min
       if (lastValue != altiMin) {
-        showScreen("ALTITUDE MIN", altiMin, METER);
+        showScreen("ALTITUDE MIN", altiMin, SYMBOL_METER);
         lastValue = altiMin;
       }  
       break;
 
     case 4:  // Pression
       if (lastValue != pression) {
-        showScreen("PRESSION", pression, HPA);
+        showScreen("PRESSION", pression, SYMBOL_HPA);
         lastValue = pression;
       }  
       break;
 
     case 5:  // Temperature
       if (lastValue != temperature) {
-        showScreen("TEMPERATURE", temperature, DEG);
+        showScreen("TEMPERATURE", temperature, SYMBOL_DEG);
         lastValue = temperature;
       }  
       break;
@@ -184,7 +186,7 @@ void loop() {
     case 6:  // Batterie
       vcc = readVcc();
       if (lastVcc != vcc) {
-        showScreen("BATTERIE", vcc, MVOLT);
+        showScreen("BATTERIE", vcc, SYMBOL_MVOLT);
         lastVcc = vcc;
       }       
       break;
@@ -212,8 +214,8 @@ void loop() {
     //display.println(debugMsg);
     //display.print("Etat : ");
     //display.println(etat);
-    if (etat == 1) drawSymbol(100, 40, 4); //UP
-    if (etat == 2) drawSymbol(100, 40, 5); // DOWN
+    if (etat == 1) drawSymbol(100, 40, SYMBOL_UP); //UP
+    if (etat == 2) drawSymbol(100, 40, SYMBOL_DOWN); // DOWN
     if (value != 0) {
       baseAltitude += value; 
       value = 0; 
