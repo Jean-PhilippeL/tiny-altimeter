@@ -27,6 +27,8 @@
 #define SYMBOL_DOWN 5
 #define SYMBOL_PERCENT 6
 
+#define READ_DHT11_MAX_TRY 10
+
 Adafruit_SSD1306 display(OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 
 /* Uncomment this block to use hardware SPI
@@ -369,7 +371,7 @@ long readVcc() {
 
 long readHumidity() {
   
-  for(int i=0; i<10; i++){
+  for(int i=0; i< READ_DHT11_MAX_TRY; i++){
     if(DHT11.read()==0){
       return DHT11.getHumidity();
     }
