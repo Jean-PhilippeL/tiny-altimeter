@@ -65,7 +65,7 @@ int screen = 0; // numero d'ecran
 #define NB_SCREENS 7
 String debugMsg;
 
-/* ------------------------------------ setup ------------------------------------------ */
+
 void setup()   {   
   digitalWrite( BUTTON1_PIN, HIGH); //active la pull up interne
   button1.releaseHandler(handleButtonReleaseEvents);
@@ -100,7 +100,6 @@ void setup()   {
   screen = 1;
 }
 
-/* ------------------------------------ loop ------------------------------------------ */
 void loop() {
   char status;
 //  long vcc;
@@ -230,7 +229,6 @@ void loop() {
 
   delay(50);
 }
-/* -------------------- fonctions --------------------  */
 
 // Affiche les données d'un ecran
 void showScreen(String label, double value, int unit) {
