@@ -6,6 +6,7 @@
 #include <Button.h>
 #include <EEPROM.h>
 #include "EEPROMAnything.h"
+#include <Dht11.h>
 
 // If using software SPI (the default case):
 #define OLED_MOSI   9
@@ -15,11 +16,14 @@
 #define OLED_RESET 13
 
 #define BUTTON1_PIN     4
+#define DHT11_PIN     2
+
 
 #define HPA 0
 #define METER 1
 #define DEG 2
 #define MVOLT 3
+#define SYMBOL_PERCENT 6
 
 Adafruit_SSD1306 display(OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 
@@ -32,11 +36,12 @@ Adafruit_SSD1306 display(OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 
 extern uint8_t Font24x40[];
 extern uint8_t Symbol[];
-extern uint8_t Splash[];
+//extern uint8_t Splash[];
 extern uint8_t Battery[];
 
 SFE_BMP180 pressure;
 Button button1 = Button(BUTTON1_PIN,BUTTON_PULLUP);
+Dht11 DHT11 = Dht11(DHT11_PIN);
 boolean longPush = false;
 int value, etat = 0;
 double QNH, saveQNH;
@@ -46,6 +51,7 @@ double altiMin = 9999.0;
 double altiMax = 0.0;
 double lastValue = 0.0;
 long lastVcc, vcc = 0;
+double lastHumidity, humidity = 0;
 int eepromAddr = 10;
 
 #define MAX_SAMPLES 20
@@ -54,12 +60,12 @@ int indexBfr = 0;
 double averagePressure = 0;
 boolean bufferReady = false;
 int screen = 0; // numero d'ecran
-#define NB_SCREENS 6
+#define NB_SCREENS 7
 String debugMsg;
 
 /* ------------------------------------ setup ------------------------------------------ */
-void setup()   {
-  digitalWrite(BUTTON1_PIN, HIGH);//enable internal pullup
+void setup()   {   
+  digitalWrite( BUTTON1_PIN, HIGH); //active la pull up interne
   button1.releaseHandler(handleButtonReleaseEvents);
   button1.holdHandler(handleButtonHoldEvents,2000);
 
@@ -73,10 +79,10 @@ void setup()   {
   }
   saveQNH = QNH;
 
-  display.clearDisplay(); 
-  display.drawBitmap(0, 0,  Splash, 128, 64, 1);
-  display.display();
-  delay(1000);
+ // display.clearDisplay(); 
+  //display.drawBitmap(0, 0,  Splash, 128, 64, 1);
+  //display.display();
+  //delay(1000);
   display.clearDisplay(); 
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -95,7 +101,7 @@ void setup()   {
 /* ------------------------------------ loop ------------------------------------------ */
 void loop() {
   char status;
-  long vcc;
+//  long vcc;
 
   button1.isPressed();
 
@@ -182,6 +188,14 @@ void loop() {
         lastVcc = vcc;
       }       
       break;
+   
+   case 7:  // Batterie
+      humidity = readHumidity();
+      if (humidity != lastHumidity) {
+        showScreen("HUMIDITY", humidity, SYMBOL_PERCENT);
+        lastHumidity = humidity;
+      }       
+      break;   
     }
   }
   else { // Settings
@@ -351,6 +365,17 @@ long readVcc() {
   result |= ADCH<<8;
   result = 1126400L / result; // Back-calculate AVcc in mV
   return result;
+}
+
+long readHumidity() {
+  
+  for(int i=0; i<10; i++){
+    if(DHT11.read()==0){
+      return DHT11.getHumidity();
+    }
+  }
+
+   return 0;
 }
 
 
