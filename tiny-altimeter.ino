@@ -66,9 +66,17 @@ boolean bufferReady = false;
 int screen = 0; // numero d'ecran
 
 
-#define UPTIME 8
+#define CURRENT_ALTITURE_SCREEN 1
+#define MAX_ALTITUDE_SCREEN 2
+#define MIN_ALTITUDE_SCREEN 3
+#define PRESSION_SCREEN 4
+#define TEMPERATURE_SCREEN 5
+#define BATTERY_SCREEN 6
+#define HUMIDITY_SCREEN 7
+#define UPTIME_SCREEN 8
 #define NB_SCREENS 8
-String debugMsg;
+
+//String debugMsg;
 
 
 void setup()   {   
@@ -152,42 +160,42 @@ void loop() {
     }
 
     switch (screen) {
-    case 1: // Altitude
+    case CURRENT_ALTITURE_SCREEN :
       if (lastValue != altitude) {
         showScreen("ALTITUDE", altitude, SYMBOL_METER);
         lastValue = altitude;
       }  
       break;
 
-    case 2: // Altitude Max
+    case MAX_ALTITUDE_SCREEN :
       if (lastValue != altiMax) {
         showScreen("ALTITUDE MAX", altiMax, SYMBOL_METER);
         lastValue = altiMax;
       }  
       break;
 
-    case 3:  // Altitude Min
+    case MIN_ALTITUDE_SCREEN :
       if (lastValue != altiMin) {
         showScreen("ALTITUDE MIN", altiMin, SYMBOL_METER);
         lastValue = altiMin;
       }  
       break;
 
-    case 4:  // Pression
+    case PRESSION_SCREEN :
       if (lastValue != pression) {
         showScreen("PRESSION", pression, SYMBOL_HPA);
         lastValue = pression;
       }  
       break;
 
-    case 5:  // Temperature
+    case TEMPERATURE_SCREEN :
       if (lastValue != temperature) {
         showScreen("TEMPERATURE", temperature, SYMBOL_DEG);
         lastValue = temperature;
       }  
       break;
 
-    case 6:  // Batterie
+    case BATTERY_SCREEN :
       vcc = readVcc();
       if (lastVcc != vcc) {
         showScreen("BATTERIE", vcc, SYMBOL_MVOLT);
@@ -195,14 +203,14 @@ void loop() {
       }       
       break;
    
-   case 7:
+   case HUMIDITY_SCREEN :
       humidity = readHumidity();
       if (humidity != lastHumidity) {
         showScreen("HUMIDITY", humidity, SYMBOL_PERCENT);
         lastHumidity = humidity;
       }       
       break;   
-   case UPTIME: 
+   case UPTIME_SCREEN:
      long uptime = millis()/1000;
      if(uptime>60){
        uptime=uptime/60; 
