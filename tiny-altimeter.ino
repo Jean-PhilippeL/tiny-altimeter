@@ -16,6 +16,8 @@
 #define OLED_RESET_PIN 13
 
 #define BUTTON1_PIN     4
+#define BUTTON2_PIN     3
+
 #define DHT11_PIN     2
 
 #define NO_SYMBOL -1
@@ -55,6 +57,8 @@ extern uint8_t Battery[];
 
 SFE_BMP180 pressure;
 Button button1 = Button(BUTTON1_PIN,BUTTON_PULLUP);
+Button button2 = Button(BUTTON2_PIN,BUTTON_PULLUP);
+
 Dht11 DHT11 = Dht11(DHT11_PIN);
 boolean longPush = false;
 int value, etat = 0;
@@ -83,7 +87,9 @@ int screen = CURRENT_ALTITUDE_SCREEN; // numero d'ecran
 
 void setup()   {   
   digitalWrite( BUTTON1_PIN, HIGH); //active la pull up interne
+  digitalWrite( BUTTON2_PIN, HIGH); //active la pull up interne
   button1.releaseHandler(handleButtonReleaseEvents);
+  button2.releaseHandler(handleButtonReleaseEvents);
   button1.holdHandler(handleButtonHoldEvents,2000);
 
   display.begin(SSD1306_SWITCHCAPVCC);
@@ -298,8 +304,19 @@ void handleButtonReleaseEvents(Button &btn) {
       if (etat == 2) value = -1;
     } 
     else { // Change screen
-      screen++;
-      if (screen > NB_SCREENS) screen = 1;
+
+      if(btn == &button1){
+          screen++;
+          if (screen > NB_SCREENS){
+            screen = 1;
+          } 
+      } else {
+        screen--;
+        if  (screen < 0){
+           screen = NB_SCREENS;
+        } 
+      }
+
       lastValue = 0;
     }
   }
