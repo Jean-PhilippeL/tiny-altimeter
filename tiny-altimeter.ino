@@ -18,7 +18,7 @@
 #define BUTTON1_PIN     4
 #define DHT11_PIN     2
 
-
+#define NO_SYMBOL -1
 #define SYMBOL_HPA 0
 #define SYMBOL_METER 1
 #define SYMBOL_DEG 2
@@ -64,7 +64,10 @@ int indexBfr = 0;
 double averagePressure = 0;
 boolean bufferReady = false;
 int screen = 0; // numero d'ecran
-#define NB_SCREENS 7
+
+
+#define UPTIME 8
+#define NB_SCREENS 8
 String debugMsg;
 
 
@@ -192,13 +195,21 @@ void loop() {
       }       
       break;
    
-   case 7:  // Batterie
+   case 7:
       humidity = readHumidity();
       if (humidity != lastHumidity) {
         showScreen("HUMIDITY", humidity, SYMBOL_PERCENT);
         lastHumidity = humidity;
       }       
       break;   
+   case UPTIME: 
+     long uptime = millis()/1000;
+     if(uptime>60){
+       uptime=uptime/60; 
+     }
+     showScreen("UPTIME", uptime, NO_SYMBOL);
+     //delay(100);
+      break;        
     }
   }
   else { // Settings
@@ -334,16 +345,20 @@ void drawFloatValue(int sx, int sy, double val, int unit) {
     int nbCar = strlen(charBuf);
     if (nbCar > 5) { // pas de decimal
       for (int n=0; n<4; n++) drawBigCar(sx+n*26, sy, charBuf[n]- '0');
-      drawSymbol(108,sy, unit);
+      if(unit != NO_SYMBOL){
+        drawSymbol(108,sy, unit);
+      }
     }
     else {
       drawBigCar(sx+86, sy, charBuf[nbCar-1]- '0');
-      drawDot(78, sy+39, 6);
-      nbCar--;
-      if (--nbCar > 0) drawBigCar(sx+52, sy, charBuf[nbCar-1]- '0');
-      if (--nbCar > 0) drawBigCar(sx+26, sy, charBuf[nbCar-1]- '0');
-      if (--nbCar > 0) drawBigCar(sx, sy, charBuf[nbCar-1]- '0');
-      drawSymbol(112,sy, unit);
+        drawDot(78, sy+39, 6);
+        nbCar--;
+        if (--nbCar > 0) drawBigCar(sx+52, sy, charBuf[nbCar-1]- '0');
+        if (--nbCar > 0) drawBigCar(sx+26, sy, charBuf[nbCar-1]- '0');
+        if (--nbCar > 0) drawBigCar(sx, sy, charBuf[nbCar-1]- '0');
+      if(unit != NO_SYMBOL){
+        drawSymbol(112,sy, unit);
+      }
     }
   }
 }
