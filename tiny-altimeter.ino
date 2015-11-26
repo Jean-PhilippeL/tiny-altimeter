@@ -9,11 +9,11 @@
 #include <Dht11.h>
 
 // If using software SPI (the default case):
-#define OLED_MOSI   9
-#define OLED_CLK   10
-#define OLED_DC    11
-#define OLED_CS    12
-#define OLED_RESET 13
+#define OLED_MOSI_PIN   9
+#define OLED_CLK_PIN   10
+#define OLED_DC_PIN    11
+#define OLED_CS_PIN    12
+#define OLED_RESET_PIN 13
 
 #define BUTTON1_PIN     4
 #define DHT11_PIN     2
@@ -39,7 +39,7 @@
 
 #define READ_DHT11_MAX_TRY 10
 
-Adafruit_SSD1306 display(OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
+Adafruit_SSD1306 display(OLED_MOSI_PIN, OLED_CLK_PIN, OLED_DC_PIN, OLED_RESET_PIN, OLED_CS_PIN);
 
 /* Uncomment this block to use hardware SPI
  #define OLED_DC     6
