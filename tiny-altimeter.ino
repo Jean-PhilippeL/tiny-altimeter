@@ -27,6 +27,16 @@
 #define SYMBOL_DOWN 5
 #define SYMBOL_PERCENT 6
 
+#define CURRENT_ALTITUDE_SCREEN 1
+#define MAX_ALTITUDE_SCREEN 2
+#define MIN_ALTITUDE_SCREEN 3
+#define PRESSION_SCREEN 4
+#define TEMPERATURE_SCREEN 5
+#define BATTERY_SCREEN 6
+#define HUMIDITY_SCREEN 7
+#define UPTIME_SCREEN 8
+#define NB_SCREENS 8
+
 #define READ_DHT11_MAX_TRY 10
 
 Adafruit_SSD1306 display(OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
@@ -63,18 +73,10 @@ double samplesBuffer[MAX_SAMPLES];
 int indexBfr = 0;
 double averagePressure = 0;
 boolean bufferReady = false;
-int screen = 0; // numero d'ecran
+int screen = CURRENT_ALTITUDE_SCREEN; // numero d'ecran
 
 
-#define CURRENT_ALTITUDE_SCREEN 1
-#define MAX_ALTITUDE_SCREEN 2
-#define MIN_ALTITUDE_SCREEN 3
-#define PRESSION_SCREEN 4
-#define TEMPERATURE_SCREEN 5
-#define BATTERY_SCREEN 6
-#define HUMIDITY_SCREEN 7
-#define UPTIME_SCREEN 8
-#define NB_SCREENS 8
+
 
 //String debugMsg;
 
@@ -109,15 +111,15 @@ void setup()   {
     while(1); // Pause forever.
   }
 
-  button1.isPressed();
-  screen = 1;
+  //button1.isPressed();
+  //screen = 1;
 }
 
 void loop() {
   char status;
 //  long vcc;
 
-  button1.isPressed();
+ // button1.isPressed();
 
   // get pressure and temperature and calculate altitude 
   status = pressure.startTemperature();
