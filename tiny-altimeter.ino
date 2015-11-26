@@ -66,7 +66,7 @@ boolean bufferReady = false;
 int screen = 0; // numero d'ecran
 
 
-#define CURRENT_ALTITURE_SCREEN 1
+#define CURRENT_ALTITUDE_SCREEN 1
 #define MAX_ALTITUDE_SCREEN 2
 #define MIN_ALTITUDE_SCREEN 3
 #define PRESSION_SCREEN 4
@@ -160,7 +160,7 @@ void loop() {
     }
 
     switch (screen) {
-    case CURRENT_ALTITURE_SCREEN :
+    case CURRENT_ALTITUDE_SCREEN :
       if (lastValue != altitude) {
         showScreen("ALTITUDE", altitude, SYMBOL_METER);
         lastValue = altitude;
