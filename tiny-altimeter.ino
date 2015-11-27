@@ -9,13 +9,17 @@
 #include <Dht11.h>
 
 // If using software SPI (the default case):
-#define OLED_MOSI_PIN   9
-#define OLED_CLK_PIN   10
-#define OLED_DC_PIN    11
-#define OLED_CS_PIN    12
-#define OLED_RESET_PIN 13
+#define OLED_CS_PIN    0 //unused
 
-#define BUTTON1_PIN     4
+#define OLED_DC_PIN         9
+#define OLED_RESET_PIN      8
+#define OLED_MOSI_PIN       7
+#define OLED_CLK_PIN        6
+#define OLED_VCC_PIN        5
+#define OLED_GND_PIN        4
+
+
+#define BUTTON1_PIN     10
 #define BUTTON2_PIN     3
 
 #define DHT11_PIN     2
@@ -86,6 +90,10 @@ int screen = CURRENT_ALTITUDE_SCREEN; // numero d'ecran
 
 
 void setup()   {   
+  
+  digitalWrite( OLED_VCC_PIN, HIGH);
+  digitalWrite( OLED_GND_PIN, LOW);
+  
   digitalWrite( BUTTON1_PIN, HIGH); //active la pull up interne
   digitalWrite( BUTTON2_PIN, HIGH); //active la pull up interne
   button1.releaseHandler(handleButtonReleaseEvents);
@@ -125,7 +133,8 @@ void loop() {
   char status;
 //  long vcc;
 
- // button1.isPressed();
+  button1.isPressed();
+   button2.isPressed();
 
   // get pressure and temperature and calculate altitude 
   status = pressure.startTemperature();
@@ -305,7 +314,7 @@ void handleButtonReleaseEvents(Button &btn) {
     } 
     else { // Change screen
 
-      if(btn == &button1){
+      if(btn == button1){
           screen++;
           if (screen > NB_SCREENS){
             screen = 1;
@@ -421,6 +430,7 @@ long readHumidity() {
 
    return 0;
 }
+
 
 
 
