@@ -22,8 +22,8 @@
 #define BUTTON1_PIN     11
 #define BUTTON2_PIN     10
 
-#define DHT11_PIN     A7
-#define DHT11_VCC_PIN     A6
+#define DHT11_PIN     12
+//#define DHT11_VCC_PIN     A6
 
 #define NO_SYMBOL -1
 #define SYMBOL_HPA 0
@@ -93,7 +93,7 @@ int screen = CURRENT_ALTITUDE_SCREEN; // numero d'ecran
 void setup()   {   
   
   digitalWrite( OLED_VCC_PIN, HIGH);
-  digitalWrite( DHT11_VCC_PIN, HIGH);
+  //digitalWrite( DHT11_VCC_PIN, HIGH);
  // digitalWrite( OLED_GND_PIN, LOW);
   
   digitalWrite( BUTTON1_PIN, HIGH); //active la pull up interne
