@@ -7,6 +7,9 @@
 #include <EEPROM.h>
 #include "EEPROMAnything.h"
 #include <Dht11.h>
+#include <Time.h>
+#include <DS1307RTC.h>
+
 
 // If using software SPI (the default case):
 #define OLED_CS_PIN    0 //unused
@@ -42,7 +45,8 @@
 #define BATTERY_SCREEN 6
 #define HUMIDITY_SCREEN 7
 #define UPTIME_SCREEN 8
-#define NB_SCREENS 8
+#define TIME_SCREEN 9
+#define NB_SCREENS 9
 
 #define READ_DHT11_MAX_TRY 10
 
@@ -225,18 +229,29 @@ void loop() {
    case HUMIDITY_SCREEN :
       humidity = readHumidity();
       if (humidity != lastHumidity) {
-        showScreen("HUMIDITY", humidity, SYMBOL_PERCENT);
+        showScreen("HUMIDITE", humidity, SYMBOL_PERCENT);
         lastHumidity = humidity;
       }       
       break;   
-   case UPTIME_SCREEN:
-     long uptime = millis()/1000;
-     if(uptime>60){
-       uptime=uptime/60; 
+      
+  case UPTIME_SCREEN:
+     lastValue = millis()/1000;
+     if(lastValue>60){
+       lastValue=lastValue/60; 
      }
-     showScreen("UPTIME", uptime, NO_SYMBOL);
+     showScreen("UPTIME", lastValue, NO_SYMBOL);
      //delay(100);
-      break;        
+      break;  
+
+   case TIME_SCREEN:
+     tmElements_t tm;
+     RTC.read(tm);
+     showScreen("HEURE", tm.Hour, NO_SYMBOL);
+     delay(1000);
+     showScreen("MINUTE", tm.Minute, NO_SYMBOL);
+     delay(1000);
+      break;  
+      
     }
   }
   else { // Settings
