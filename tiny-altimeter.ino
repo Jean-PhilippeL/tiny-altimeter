@@ -22,10 +22,10 @@
 //#define OLED_GND_PIN        4
 
 
-#define BUTTON1_PIN     11
-#define BUTTON2_PIN     10
+#define BUTTON_UP_PIN     10
+#define BUTTON_DOWN_PIN     9
 
-#define DHT11_PIN     12
+#define DHT11_PIN     8
 //#define DHT11_VCC_PIN     A6
 
 #define NO_SYMBOL -1
@@ -33,8 +33,8 @@
 #define SYMBOL_METER 1
 #define SYMBOL_DEG 2
 #define SYMBOL_MVOLT 3
-#define SYMBOL_UP 4
-#define SYMBOL_DOWN 5
+//#define SYMBOL_UP 4
+//#define SYMBOL_DOWN 5
 #define SYMBOL_PERCENT 6
 
 #define CURRENT_ALTITUDE_SCREEN 1
@@ -44,8 +44,9 @@
 #define TEMPERATURE_SCREEN 5
 #define BATTERY_SCREEN 6
 #define HUMIDITY_SCREEN 7
-#define UPTIME_SCREEN 8
-#define TIME_SCREEN 9
+//#define UPTIME_SCREEN 8
+#define HOUR_SCREEN 8
+#define MIN_SCREEN 9
 #define NB_SCREENS 9
 
 #define READ_DHT11_MAX_TRY 10
@@ -65,12 +66,13 @@ extern uint8_t Symbol[];
 extern uint8_t Battery[];
 
 SFE_BMP180 pressure;
-Button button1 = Button(BUTTON1_PIN,BUTTON_PULLUP);
-Button button2 = Button(BUTTON2_PIN,BUTTON_PULLUP);
+Button buttonUp = Button(BUTTON_UP_PIN,BUTTON_PULLUP);
+Button buttonDown = Button(BUTTON_DOWN_PIN,BUTTON_PULLUP);
 
 Dht11 DHT11 = Dht11(DHT11_PIN);
 boolean longPush = false;
-int value, etat = 0;
+int value = 0;
+boolean settingMode = false;
 double QNH, saveQNH;
 double temperature, pression, altitude = 0;
 double baseAltitude, saveBaseAltitude = 0;
@@ -88,11 +90,7 @@ double averagePressure = 0;
 boolean bufferReady = false;
 int screen = CURRENT_ALTITUDE_SCREEN; // numero d'ecran
 
-
-
-
-//String debugMsg;
-
+tmElements_t tm;
 
 void setup()   {   
   
@@ -102,9 +100,9 @@ void setup()   {
   
   digitalWrite( BUTTON1_PIN, HIGH); //active la pull up interne
   digitalWrite( BUTTON2_PIN, HIGH); //active la pull up interne
-  button1.releaseHandler(handleButtonReleaseEvents);
-  button2.releaseHandler(handleButtonReleaseEvents);
-  button1.holdHandler(handleButtonHoldEvents,2000);
+  buttonUp.releaseHandler(handleButtonReleaseEvents);
+  buttonDown.releaseHandler(handleButtonReleaseEvents);
+  buttonUp.holdHandler(handleButtonHoldEvents,2000);
 
   display.begin(SSD1306_SWITCHCAPVCC);
 
@@ -116,10 +114,6 @@ void setup()   {
   }
   saveQNH = QNH;
 
- // display.clearDisplay(); 
-  //display.drawBitmap(0, 0,  Splash, 128, 64, 1);
-  //display.display();
-  //delay(1000);
   display.clearDisplay(); 
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -131,16 +125,13 @@ void setup()   {
     while(1); // Pause forever.
   }
 
-  //button1.isPressed();
-  //screen = 1;
 }
 
 void loop() {
   char status;
-//  long vcc;
 
-  button1.isPressed();
-   button2.isPressed();
+  buttonUp.isPressed();
+   buttonDown.isPressed();
 
   // get pressure and temperature and calculate altitude 
   status = pressure.startTemperature();
@@ -165,7 +156,7 @@ void loop() {
     } 
   }
 
-  if (etat == 0) {
+  if (!settingMode) {
     // init baseAltitude
     if (baseAltitude == 0) { 
       baseAltitude = round(altitude);
@@ -185,35 +176,35 @@ void loop() {
     switch (screen) {
     case CURRENT_ALTITUDE_SCREEN :
       if (lastValue != altitude) {
-        showScreen("ALTITUDE", altitude, SYMBOL_METER);
+        showScreen("ALT.", altitude, SYMBOL_METER);
         lastValue = altitude;
       }  
       break;
 
     case MAX_ALTITUDE_SCREEN :
       if (lastValue != altiMax) {
-        showScreen("ALTITUDE MAX", altiMax, SYMBOL_METER);
+        showScreen("ALT. MAX", altiMax, SYMBOL_METER);
         lastValue = altiMax;
       }  
       break;
 
     case MIN_ALTITUDE_SCREEN :
       if (lastValue != altiMin) {
-        showScreen("ALTITUDE MIN", altiMin, SYMBOL_METER);
+        showScreen("ALT. MIN", altiMin, SYMBOL_METER);
         lastValue = altiMin;
       }  
       break;
 
     case PRESSION_SCREEN :
       if (lastValue != pression) {
-        showScreen("PRESSION", pression, SYMBOL_HPA);
+        showScreen("PRESS", pression, SYMBOL_HPA);
         lastValue = pression;
       }  
       break;
 
     case TEMPERATURE_SCREEN :
       if (lastValue != temperature) {
-        showScreen("TEMPERATURE", temperature, SYMBOL_DEG);
+        showScreen("TEMP", temperature, SYMBOL_DEG);
         lastValue = temperature;
       }  
       break;
@@ -221,7 +212,7 @@ void loop() {
     case BATTERY_SCREEN :
       vcc = readVcc();
       if (lastVcc != vcc) {
-        showScreen("BATTERIE", vcc, SYMBOL_MVOLT);
+        showScreen("BAT", vcc, SYMBOL_MVOLT);
         lastVcc = vcc;
       }       
       break;
@@ -229,11 +220,12 @@ void loop() {
    case HUMIDITY_SCREEN :
       humidity = readHumidity();
       if (humidity != lastHumidity) {
-        showScreen("HUMIDITE", humidity, SYMBOL_PERCENT);
+        showScreen("HUMI", humidity, SYMBOL_PERCENT);
         lastHumidity = humidity;
       }       
       break;   
       
+      /*
   case UPTIME_SCREEN:
      lastValue = millis()/1000;
      if(lastValue>60){
@@ -241,15 +233,17 @@ void loop() {
      }
      showScreen("UPTIME", lastValue, NO_SYMBOL);
      //delay(100);
-      break;  
+      break;  */
 
-   case TIME_SCREEN:
-     tmElements_t tm;
+   case HOUR_SCREEN:
+     
      RTC.read(tm);
-     showScreen("HEURE", tm.Hour, NO_SYMBOL);
-     delay(1000);
-     showScreen("MINUTE", tm.Minute, NO_SYMBOL);
-     delay(1000);
+     showScreen("H", tm.Hour, NO_SYMBOL);
+      break;  
+      
+   case  MIN_SCREEN:
+     RTC.read(tm);
+     showScreen("MIN", tm.Minute, NO_SYMBOL);
       break;  
       
     }
@@ -268,8 +262,8 @@ void loop() {
     //display.println(debugMsg);
     //display.print("Etat : ");
     //display.println(etat);
-    if (etat == 1) drawSymbol(100, 40, SYMBOL_UP); //UP
-    if (etat == 2) drawSymbol(100, 40, SYMBOL_DOWN); // DOWN
+    //if (etat == 1) drawSymbol(100, 40, SYMBOL_UP); //UP
+    //if (etat == 2) drawSymbol(100, 40, SYMBOL_DOWN); // DOWN
     if (value != 0) {
       baseAltitude += value; 
       value = 0; 
@@ -325,13 +319,17 @@ void resetAltiMinMax() {
 void handleButtonReleaseEvents(Button &btn) {
   //debugMsg = "Release";
   if (!longPush) {
-    if (etat != 0 ) { // Settings
-      if (etat == 1) value = 1;
-      if (etat == 2) value = -1;
+    if (settingMode) { // Settings
+      
+      if(btn == buttonUp){
+        value++;
+      } else {
+        value--;
+      }     
     } 
     else { // Change screen
 
-      if(btn == button1){
+      if(btn == buttonUp){
           screen++;
           if (screen > NB_SCREENS){
             screen = 1;
@@ -351,16 +349,14 @@ void handleButtonReleaseEvents(Button &btn) {
 
 // Gestion de l'appui prolongé sur le bouton
 void handleButtonHoldEvents(Button &btn) {
-  //debugMsg = "Hold";
   longPush = true;
-  //screen = 1;
   value = 0;
-  if (screen == 1 && ++etat > 2) {
-    etat = 0;
-  }
-  else if (screen == 2 || screen == 3) {
+
+  if (screen == MAX_ALTITUDE_SCREEN || screen == MIN_ALTITUDE_SCREEN) {
     resetAltiMinMax();
-  }
+  } else if (screen == ALTITUDE_SCREEN) {
+    settingMode = !settingMode;
+  } 
 }
 
 // Affiche un caractére en x, y
