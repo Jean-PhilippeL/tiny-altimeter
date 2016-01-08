@@ -119,10 +119,9 @@ void setup()   {
   display.setTextColor(WHITE);
   display.setCursor(0,0);
   if (!pressure.begin()) {
-    display.println("Init fail !");
-    display.println("Turn OFF");
+    display.println("pressure fail");
     display.display();
-    while(1); // Pause forever.
+    delay(3000); 
   }
 
 }
@@ -317,34 +316,32 @@ void resetAltiMinMax() {
 }
 // Gestion du bouton relaché
 void handleButtonReleaseEvents(Button &btn) {
-  //debugMsg = "Release";
-  if (!longPush) {
-    if (settingMode) { // Settings
-      
-      if(btn == buttonUp){
-        value++;
-      } else {
-        value--;
-      }     
-    } 
-    else { // Change screen
-
-      if(btn == buttonUp){
-          screen++;
-          if (screen > NB_SCREENS){
-            screen = 1;
-          } 
-      } else {
-        screen--;
-        if  (screen < 0){
-           screen = NB_SCREENS;
-        } 
+      longPush = false;
+      if (settingMode) { // Settings
+        if(btn == buttonUp){
+          value++;
+        } else {
+          value--;
+        }     
       }
+      else { // Change screen
 
-      lastValue = 0;
-    }
-  }
-  longPush = false;
+        if(btn == buttonUp){
+            screen++;
+            if (screen > NB_SCREENS){
+              screen = 1;
+            } 
+        } else {
+          screen--;
+          if  (screen < 0){
+             screen = NB_SCREENS;
+          } 
+        }
+
+        lastValue = 0;
+      }
+}
+ 
 }
 
 // Gestion de l'appui prolongé sur le bouton
