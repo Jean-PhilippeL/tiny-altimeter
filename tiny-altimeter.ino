@@ -98,8 +98,8 @@ void setup()   {
   //digitalWrite( DHT11_VCC_PIN, HIGH);
  // digitalWrite( OLED_GND_PIN, LOW);
   
-  digitalWrite( BUTTON1_PIN, HIGH); //active la pull up interne
-  digitalWrite( BUTTON2_PIN, HIGH); //active la pull up interne
+  digitalWrite( BUTTON_UP_PIN, HIGH); //active la pull up interne
+  digitalWrite( BUTTON_DOWN_PIN, HIGH); //active la pull up interne
   buttonUp.releaseHandler(handleButtonReleaseEvents);
   buttonDown.releaseHandler(handleButtonReleaseEvents);
   buttonUp.holdHandler(handleButtonHoldEvents,2000);
