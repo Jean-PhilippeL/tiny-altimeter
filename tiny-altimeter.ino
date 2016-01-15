@@ -119,7 +119,7 @@ void setup()   {
   display.setTextColor(WHITE);
   display.setCursor(0,0);
   if (!pressure.begin()) {
-    display.println("pressure fail");
+    display.println(F("pressure fail"));
     display.display();
     delay(3000); 
   }
@@ -175,35 +175,35 @@ void loop() {
     switch (screen) {
     case CURRENT_ALTITUDE_SCREEN :
       if (lastValue != altitude) {
-        showScreen("ALT.", altitude, SYMBOL_METER);
+        showScreen(F("ALT."), altitude, SYMBOL_METER);
         lastValue = altitude;
       }  
       break;
 
     case MAX_ALTITUDE_SCREEN :
       if (lastValue != altiMax) {
-        showScreen("ALT. MAX", altiMax, SYMBOL_METER);
+        showScreen(F("ALT. MAX"), altiMax, SYMBOL_METER);
         lastValue = altiMax;
       }  
       break;
 
     case MIN_ALTITUDE_SCREEN :
       if (lastValue != altiMin) {
-        showScreen("ALT. MIN", altiMin, SYMBOL_METER);
+        showScreen(F("ALT. MIN"), altiMin, SYMBOL_METER);
         lastValue = altiMin;
       }  
       break;
 
     case PRESSION_SCREEN :
       if (lastValue != pression) {
-        showScreen("PRESS", pression, SYMBOL_HPA);
+        showScreen(F("PRESS"), pression, SYMBOL_HPA);
         lastValue = pression;
       }  
       break;
 
     case TEMPERATURE_SCREEN :
       if (lastValue != temperature) {
-        showScreen("TEMP", temperature, SYMBOL_DEG);
+        showScreen(F("TEMP"), temperature, SYMBOL_DEG);
         lastValue = temperature;
       }  
       break;
@@ -211,7 +211,7 @@ void loop() {
     case BATTERY_SCREEN :
       vcc = readVcc();
       if (lastVcc != vcc) {
-        showScreen("BAT", vcc, SYMBOL_MVOLT);
+        showScreen(F("BAT"), vcc, SYMBOL_MVOLT);
         lastVcc = vcc;
       }       
       break;
@@ -219,7 +219,7 @@ void loop() {
    case HUMIDITY_SCREEN :
       humidity = readHumidity();
       if (humidity != lastHumidity) {
-        showScreen("HUMI", humidity, SYMBOL_PERCENT);
+        showScreen(F("HUMI"), humidity, SYMBOL_PERCENT);
         lastHumidity = humidity;
       }       
       break;   
@@ -252,7 +252,7 @@ void loop() {
     display.clearDisplay(); 
     display.setTextSize(1);
     display.setCursor(0,0);
-    display.println("CALIBRATION");
+    display.println(F("CALIBRATION"));
     display.setCursor(0,15);
     display.print("QNH : ");
     display.print(QNH,2);
@@ -342,7 +342,6 @@ void handleButtonReleaseEvents(Button &btn) {
       }
 }
  
-}
 
 // Gestion de l'appui prolongé sur le bouton
 void handleButtonHoldEvents(Button &btn) {
@@ -351,7 +350,7 @@ void handleButtonHoldEvents(Button &btn) {
 
   if (screen == MAX_ALTITUDE_SCREEN || screen == MIN_ALTITUDE_SCREEN) {
     resetAltiMinMax();
-  } else if (screen == ALTITUDE_SCREEN) {
+  } else if (screen == CURRENT_ALTITUDE_SCREEN) {
     settingMode = !settingMode;
   } 
 }
