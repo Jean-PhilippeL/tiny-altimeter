@@ -5,7 +5,7 @@
 
 #include <avr/pgmspace.h>
 
-uint8_t Font24x40[] PROGMEM={
+const uint8_t Font24x40[] PROGMEM={
   0x00, 0x3e, 0x00, 
   0x00, 0xff, 0x80, 
   0x03, 0xff, 0xe0, 

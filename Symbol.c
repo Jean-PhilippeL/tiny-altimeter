@@ -5,7 +5,7 @@
 
 #include <avr/pgmspace.h>
 
-uint8_t Symbol[] PROGMEM={
+const uint8_t Symbol[] PROGMEM={
   0x00, 0x00, 
   0x00, 0x00, 
   0x00, 0x00, 

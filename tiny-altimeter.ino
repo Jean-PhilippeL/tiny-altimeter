@@ -9,6 +9,7 @@
 #include <Dht11.h>
 #include <Time.h>
 #include <DS1307RTC.h>
+#include "LowPower.h"
 
 
 // If using software SPI (the default case):
@@ -51,7 +52,10 @@
 
 #define READ_DHT11_MAX_TRY 10
 
-Adafruit_SSD1306 display(OLED_MOSI_PIN, OLED_CLK_PIN, OLED_DC_PIN, OLED_RESET_PIN, OLED_CS_PIN);
+//Adafruit_SSD1306 display(OLED_MOSI_PIN, OLED_CLK_PIN, OLED_DC_PIN, OLED_RESET_PIN, OLED_CS_PIN);
+
+Adafruit_SSD1306 display(-1);
+
 
 /* Uncomment this block to use hardware SPI
  #define OLED_DC     6
@@ -66,8 +70,8 @@ extern uint8_t Symbol[];
 extern uint8_t Battery[];
 
 SFE_BMP180 pressure;
-Button buttonUp = Button(BUTTON_UP_PIN,BUTTON_PULLUP);
-Button buttonDown = Button(BUTTON_DOWN_PIN,BUTTON_PULLUP);
+Button buttonUp = Button(BUTTON_UP_PIN);
+Button buttonDown = Button(BUTTON_DOWN_PIN);
 
 Dht11 DHT11 = Dht11(DHT11_PIN);
 boolean longPush = false;
@@ -98,13 +102,15 @@ void setup()   {
   //digitalWrite( DHT11_VCC_PIN, HIGH);
  // digitalWrite( OLED_GND_PIN, LOW);
   
-  digitalWrite( BUTTON_UP_PIN, HIGH); //active la pull up interne
-  digitalWrite( BUTTON_DOWN_PIN, HIGH); //active la pull up interne
+  //digitalWrite( BUTTON_UP_PIN, HIGH); //active la pull up interne
+  //digitalWrite( BUTTON_DOWN_PIN, HIGH); //active la pull up interne
+  
   buttonUp.releaseHandler(handleButtonReleaseEvents);
   buttonDown.releaseHandler(handleButtonReleaseEvents);
   buttonUp.holdHandler(handleButtonHoldEvents,2000);
 
-  display.begin(SSD1306_SWITCHCAPVCC);
+ // display.begin(SSD1306_SWITCHCAPVCC);
+  display.begin();
 
   // init QNH
   EEPROM_readAnything(eepromAddr, QNH);
@@ -276,6 +282,7 @@ void loop() {
   }
 
   delay(50);
+   //TODO essayer : LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF); 
 }
 
 // Affiche les données d'un ecran
@@ -385,11 +392,19 @@ void drawSymbol(int sx, int sy, int num) {
 // Affiche un nombre decimal
 void drawFloatValue(int sx, int sy, double val, int unit) {
   char charBuf[15];
-  if (val < 10000) {
+if (val < 0){
+val=-val;
+ display.fillRect(0, 39, 12, 6, WHITE);
+// drawDot(0, 39, 12);
+}
+  
+  if (val < 10000) { // TODO : et sinon??
     dtostrf(val, 3, 1, charBuf); 
     int nbCar = strlen(charBuf);
     if (nbCar > 5) { // pas de decimal
-      for (int n=0; n<4; n++) drawBigCar(sx+n*26, sy, charBuf[n]- '0');
+      for (int n=0; n<4; n++){
+        drawBigCar(sx+n*26, sy, charBuf[n]- '0');
+      }
       if(unit != NO_SYMBOL){
         drawSymbol(108,sy, unit);
       }
@@ -407,6 +422,9 @@ void drawFloatValue(int sx, int sy, double val, int unit) {
     }
   }
 }
+
+
+
 // Show battery level icon
 void showBatterylevel(long vcc) {
   if (vcc > 3600) display.drawBitmap(104, 1,  Battery, 20, 7, 1); 
