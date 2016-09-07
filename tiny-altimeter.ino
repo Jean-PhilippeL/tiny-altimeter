@@ -133,35 +133,31 @@ void setup()   {
 }
 
 void loop() {
-  char status;
-
   buttonUp.isPressed();
-   buttonDown.isPressed();
+  buttonDown.isPressed();
 
-  // get pressure and temperature and calculate altitude 
-  status = pressure.startTemperature();
-  if (status != 0) {
-    delay(status);
-    status = pressure.getTemperature(temperature);
-    if (status != 0) {
-      status = pressure.startPressure(0);
-      if (status != 0) {
-        delay(status);
-        status = pressure.getPressure(pression, temperature);
-        if (status != 0) {
-          savePressureSample(pression);
-          averagePressure = getPressureAverage();
-          if (bufferReady) {
-            altitude = pressure.altitude(averagePressure*100, QNH*100);
-            setAltiMinMax();
-          }
+  updatePressureAndTemperature();
 
-        }
-      } 
-    } 
+  if (settingMode) {
+    displaySettings();
+  } else {
+    displayMainScreen();           
   }
+  delay(50);
+   //TODO essayer : LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF); 
+}
 
-  if (!settingMode) {
+// Affiche les données d'un ecran
+void showScreen(String label, double value, int unit) {
+  display.clearDisplay(); 
+  showBatterylevel(readVcc());
+  display.setCursor(0,0);
+  display.println(label);
+  drawFloatValue(0, 20, value, unit);
+  display.display();  
+}
+
+void displayMainScreen(){
     // init baseAltitude
     if (baseAltitude == 0) { 
       baseAltitude = round(altitude);
@@ -252,10 +248,10 @@ void loop() {
       break;  
       
     }
-  }
-  else { // Settings
-    // Settings
-    display.clearDisplay(); 
+}
+
+void displaySettings(){
+  display.clearDisplay(); 
     display.setTextSize(1);
     display.setCursor(0,0);
     display.println(F("CALIBRATION"));
@@ -278,21 +274,7 @@ void loop() {
     display.setCursor(0,45);
     display.print("Alti : ");
     display.println(baseAltitude, 0);
-    display.display();            
-  }
-
-  delay(50);
-   //TODO essayer : LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF); 
-}
-
-// Affiche les données d'un ecran
-void showScreen(String label, double value, int unit) {
-  display.clearDisplay(); 
-  showBatterylevel(readVcc());
-  display.setCursor(0,0);
-  display.println(label);
-  drawFloatValue(0, 20, value, unit);
-  display.display();  
+    display.display();  
 }
 
 // Enregistre un echantillon de pression
@@ -311,6 +293,31 @@ float getPressureAverage() {
     sum += samplesBuffer[i];
   }
   return sum/MAX_SAMPLES;
+}
+
+void updatePressureAndTemperature(){
+    // get pressure and temperature and calculate altitude 
+  char status = pressure.startTemperature();
+  if (status != 0) {
+    delay(status);
+    status = pressure.getTemperature(temperature);
+    if (status != 0) {
+      status = pressure.startPressure(0);
+      if (status != 0) {
+        delay(status);
+        status = pressure.getPressure(pression, temperature);
+        if (status != 0) {
+          savePressureSample(pression);
+          averagePressure = getPressureAverage();
+          if (bufferReady) {
+            altitude = pressure.altitude(averagePressure*100, QNH*100);
+            setAltiMinMax();
+          }
+
+        }
+      } 
+    } 
+  }
 }
 
 // Enregistre les altitudes Min & Max
@@ -340,7 +347,7 @@ void handleButtonReleaseEvents(Button &btn) {
             } 
         } else {
           screen--;
-          if  (screen < 0){
+          if  (screen == 0){
              screen = NB_SCREENS;
           } 
         }
