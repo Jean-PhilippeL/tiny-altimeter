@@ -74,7 +74,7 @@ Button buttonUp = Button(BUTTON_UP_PIN);
 Button buttonDown = Button(BUTTON_DOWN_PIN);
 
 Dht11 DHT11 = Dht11(DHT11_PIN);
-boolean longPush = false;
+
 int value = 0;
 boolean settingMode = false;
 double QNH, saveQNH;
@@ -93,24 +93,31 @@ int indexBfr = 0;
 double averagePressure = 0;
 boolean bufferReady = false;
 int screen = CURRENT_ALTITUDE_SCREEN; // numero d'ecran
-
+boolean skipClic = false;
 tmElements_t tm;
+
+long lastUpdate=0;
 
 void setup()   {   
   
-  digitalWrite( OLED_VCC_PIN, HIGH);
+  //digitalWrite( OLED_VCC_PIN, HIGH);
   //digitalWrite( DHT11_VCC_PIN, HIGH);
  // digitalWrite( OLED_GND_PIN, LOW);
   
   //digitalWrite( BUTTON_UP_PIN, HIGH); //active la pull up interne
   //digitalWrite( BUTTON_DOWN_PIN, HIGH); //active la pull up interne
   
-  buttonUp.releaseHandler(handleButtonReleaseEvents);
-  buttonDown.releaseHandler(handleButtonReleaseEvents);
-  buttonUp.holdHandler(handleButtonHoldEvents,2000);
+  buttonUp.clickHandler(handleButtonReleaseEvents);
+  buttonDown.clickHandler(handleButtonReleaseEvents);
+  buttonUp.holdHandler(handleButtonHoldEvents,1000);
+  buttonDown.holdHandler(handleButtonHoldEvents,1000);
 
  // display.begin(SSD1306_SWITCHCAPVCC);
   display.begin();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+    display.clearDisplay(); 
+display.display();
 
   // init QNH
   EEPROM_readAnything(eepromAddr, QNH);
@@ -120,31 +127,54 @@ void setup()   {
   }
   saveQNH = QNH;
 
-  display.clearDisplay(); 
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
+
   if (!pressure.begin()) {
-    display.println(F("pressure fail"));
+  
+  //display.setCursor(0,0);
+    display.println(F("fail"));
     display.display();
     delay(3000); 
   }
 
+//TODO : diminuer luminosité :display.dim(true);
 }
 
 void loop() {
-  buttonUp.isPressed();
-  buttonDown.isPressed();
-
-  updatePressureAndTemperature();
+  bool b1 = buttonUp.isPressed();
+  bool b2 = buttonDown.isPressed();
+if(b1 && b2){
+  value = 0;
+// TODO afficher message indiquant le passage en mode settings
+ display.clearDisplay(); 
+    display.setTextSize(1);
+    display.setCursor(0,0);
+    display.println(F("PRESS"));
+    display.display();
+  
+  if (screen == MAX_ALTITUDE_SCREEN || screen == MIN_ALTITUDE_SCREEN) {
+    resetAltiMinMax();
+  } else {
+    settingMode = !settingMode;
+  } 
+  delay(500);
+}
+  
+  
+  
 
   if (settingMode) {
     displaySettings();
   } else {
-    displayMainScreen();           
+    if(millis() -1000 > lastUpdate){
+      updatePressureAndTemperature();
+       displayMainScreen();
+       lastUpdate = millis();
+    }
+               
   }
   delay(50);
-   //TODO essayer : LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF); 
+   //TODO essayer : 
+   LowPower.powerDown(SLEEP_60MS, ADC_OFF, BOD_OFF); 
 }
 
 // Affiche les données d'un ecran
@@ -237,7 +267,6 @@ void displayMainScreen(){
       break;  */
 
    case HOUR_SCREEN:
-     
      RTC.read(tm);
      showScreen("H", tm.Hour, NO_SYMBOL);
       break;  
@@ -252,7 +281,7 @@ void displayMainScreen(){
 
 void displaySettings(){
   display.clearDisplay(); 
-    display.setTextSize(1);
+    //display.setTextSize(1);
     display.setCursor(0,0);
     display.println(F("CALIBRATION"));
     display.setCursor(0,15);
@@ -330,7 +359,12 @@ void resetAltiMinMax() {
 }
 // Gestion du bouton relaché
 void handleButtonReleaseEvents(Button &btn) {
-      longPush = false;
+lastUpdate=0;
+if(skipClic){
+  skipClic = false;
+  return;
+}
+  
       if (settingMode) { // Settings
         if(btn == buttonUp){
           value++;
@@ -359,14 +393,35 @@ void handleButtonReleaseEvents(Button &btn) {
 
 // Gestion de l'appui prolongé sur le bouton
 void handleButtonHoldEvents(Button &btn) {
-  longPush = true;
-  value = 0;
+skipClic=true;
 
-  if (screen == MAX_ALTITUDE_SCREEN || screen == MIN_ALTITUDE_SCREEN) {
-    resetAltiMinMax();
-  } else if (screen == CURRENT_ALTITUDE_SCREEN) {
-    settingMode = !settingMode;
-  } 
+   if (settingMode) { // Settings
+        if(btn == buttonUp){
+          value+=10;
+        } else {
+          value-=10;
+        }     
+      }
+      
+    if(screen == HOUR_SCREEN){
+        RTC.read(tm); 
+         if(btn == buttonUp){
+            tm.Hour++;
+        } else {
+            tm.Hour--;
+        }   
+        RTC.write(tm); 
+    }
+
+    if(screen == MIN_SCREEN){
+        RTC.read(tm); 
+         if(btn == buttonUp){
+            tm.Minute++;
+        } else {
+            tm.Minute--;
+        }   
+        RTC.write(tm); 
+    }
 }
 
 // Affiche un caractére en x, y
