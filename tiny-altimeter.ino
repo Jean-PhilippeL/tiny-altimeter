@@ -116,8 +116,9 @@ void setup()   {
   display.begin();
   display.setTextSize(1);
   display.setTextColor(WHITE);
-    display.clearDisplay(); 
-display.display();
+  display.clearDisplay(); 
+  display.println(F("init"));
+  display.display();
 
   // init QNH
   EEPROM_readAnything(eepromAddr, QNH);
@@ -142,22 +143,18 @@ display.display();
 void loop() {
   bool b1 = buttonUp.isPressed();
   bool b2 = buttonDown.isPressed();
-if(b1 && b2){
-  value = 0;
-// TODO afficher message indiquant le passage en mode settings
- display.clearDisplay(); 
-    display.setTextSize(1);
-    display.setCursor(0,0);
-    display.println(F("PRESS"));
-    display.display();
-  
-  if (screen == MAX_ALTITUDE_SCREEN || screen == MIN_ALTITUDE_SCREEN) {
-    resetAltiMinMax();
-  } else {
-    settingMode = !settingMode;
-  } 
-  delay(500);
-}
+  if(b1 && b2){
+    value = 0;
+    // inverse l'écran pour montrer que la manipulation à été prise en compte
+    display.invertDisplay(true);
+    delay(500);
+    display.invertDisplay(false);
+      if (screen == MAX_ALTITUDE_SCREEN || screen == MIN_ALTITUDE_SCREEN) {
+        resetAltiMinMax();
+      } else {
+        settingMode = !settingMode;
+      }   
+      }
   
   
   
