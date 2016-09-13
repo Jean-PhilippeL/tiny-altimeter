@@ -27,7 +27,7 @@
 #define BUTTON_DOWN_PIN     9
 
 #define DHT11_PIN     8
-//#define DHT11_VCC_PIN     A6
+#define DHT11_VCC_PIN     7
 
 #define NO_SYMBOL -1
 #define SYMBOL_HPA 0
@@ -73,7 +73,7 @@ SFE_BMP180 pressure;
 Button buttonUp = Button(BUTTON_UP_PIN);
 Button buttonDown = Button(BUTTON_DOWN_PIN);
 
-Dht11 DHT11 = Dht11(DHT11_PIN);
+
 
 int value = 0;
 boolean settingMode = false;
@@ -96,7 +96,7 @@ int screen = CURRENT_ALTITUDE_SCREEN; // numero d'ecran
 boolean skipClic = false;
 tmElements_t tm;
 
-long lastUpdate=0;
+unsigned long lastUpdate=0;
 
 void setup()   {   
   
@@ -170,7 +170,7 @@ void loop() {
                
   }
   delay(50);
-   //TODO essayer : 
+  
    LowPower.powerDown(SLEEP_60MS, ADC_OFF, BOD_OFF); 
 }
 
@@ -507,14 +507,11 @@ long readVcc() {
 }
 
 long readHumidity() {
-  
-  for(int i=0; i< READ_DHT11_MAX_TRY; i++){
-    if(DHT11.read()==0){
-      return DHT11.getHumidity();
+    Dht11 dht11 = Dht11(DHT11_PIN);
+    if(dht11.read()==0){
+      return dht11.getHumidity();
     }
-  }
-
-   return 0;
+    return 0;
 }
 
 
