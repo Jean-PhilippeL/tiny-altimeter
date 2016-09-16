@@ -64,8 +64,8 @@ Adafruit_SSD1306 display(-1);
  Adafruit_SSD1306 display(OLED_DC, OLED_RESET, OLED_CS);
  */
 
-extern uint8_t Font24x40[];
-extern uint8_t Symbol[];
+//extern uint8_t Font24x40[];
+//extern uint8_t Symbol[];
 //extern uint8_t Splash[];
 extern uint8_t Battery[];
 
@@ -169,18 +169,27 @@ void loop() {
     }
                
   }
-  delay(50);
+  //delay(50);
   
    LowPower.powerDown(SLEEP_60MS, ADC_OFF, BOD_OFF); 
 }
 
 // Affiche les données d'un ecran
-void showScreen(String label, double value, int unit) {
+void showScreen(String label, double value, String unit) {
   display.clearDisplay(); 
   showBatterylevel(readVcc());
   display.setCursor(0,0);
   display.println(label);
-  drawFloatValue(0, 20, value, unit);
+
+  char buffer2[6];
+  sprintf(buffer2, "%4.2i", (int)value);
+
+  display.setCursor(0,10);
+  display.setTextSize(4);
+  display.print(buffer2);
+   display.setTextSize(1);
+   display.print(unit);
+ 
   display.display();  
 }
 
@@ -201,38 +210,40 @@ void displayMainScreen(){
       EEPROM_writeAnything(eepromAddr, QNH);
     }
 
+     
+
     switch (screen) {
     case CURRENT_ALTITUDE_SCREEN :
       if (lastValue != altitude) {
-        showScreen(F("ALT."), altitude, SYMBOL_METER);
+        showScreen(F("ALT."), altitude, "m");
         lastValue = altitude;
       }  
       break;
 
     case MAX_ALTITUDE_SCREEN :
       if (lastValue != altiMax) {
-        showScreen(F("ALT. MAX"), altiMax, SYMBOL_METER);
+        showScreen(F("ALT. MAX"), altiMax, "m");
         lastValue = altiMax;
       }  
       break;
 
     case MIN_ALTITUDE_SCREEN :
       if (lastValue != altiMin) {
-        showScreen(F("ALT. MIN"), altiMin, SYMBOL_METER);
+        showScreen(F("ALT. MIN"), altiMin, "m");
         lastValue = altiMin;
       }  
       break;
 
     case PRESSION_SCREEN :
       if (lastValue != pression) {
-        showScreen(F("PRESS"), pression, SYMBOL_HPA);
+        showScreen(F("PRESS"), pression, "hPa");
         lastValue = pression;
       }  
       break;
 
     case TEMPERATURE_SCREEN :
       if (lastValue != temperature) {
-        showScreen(F("TEMP"), temperature, SYMBOL_DEG);
+        showScreen(F("TEMP"), temperature, "°");
         lastValue = temperature;
       }  
       break;
@@ -240,7 +251,7 @@ void displayMainScreen(){
     case BATTERY_SCREEN :
       vcc = readVcc();
       if (lastVcc != vcc) {
-        showScreen(F("BAT"), vcc, SYMBOL_MVOLT);
+        showScreen(F("BAT"), vcc, "mV");
         lastVcc = vcc;
       }       
       break;
@@ -248,7 +259,7 @@ void displayMainScreen(){
    case HUMIDITY_SCREEN :
       humidity = readHumidity();
       if (humidity != lastHumidity) {
-        showScreen(F("HUMI"), humidity, SYMBOL_PERCENT);
+        showScreen(F("HUMI"), humidity, "%");
         lastHumidity = humidity;
       }       
       break;   
@@ -264,13 +275,35 @@ void displayMainScreen(){
       break;  */
 
    case HOUR_SCREEN:
-     RTC.read(tm);
-     showScreen("H", tm.Hour, NO_SYMBOL);
+
+
+ RTC.read(tm);
+
+  display.clearDisplay(); 
+  showBatterylevel(readVcc());
+  display.setCursor(0,0);
+  display.println("HEURE");
+  display.setCursor(0,10);
+  display.setTextSize(4);
+  
+  char buffer2[6];
+
+    sprintf(buffer2, "%2i", tm.Hour );
+    display.print(buffer2);
+  display.setCursor(40,10);
+    display.print(":");
+     display.setCursor(55,10);
+ sprintf(buffer2, "%2i",tm.Minute );
+  display.print(buffer2);
+  display.setTextSize(1);
+  sprintf(buffer2, "%2i",tm.Second );
+  display.print(buffer2);
+  display.display();  
       break;  
       
    case  MIN_SCREEN:
      RTC.read(tm);
-     showScreen("MIN", tm.Minute, NO_SYMBOL);
+     showScreen("MIN", tm.Minute, "");
       break;  
       
     }
@@ -421,66 +454,8 @@ skipClic=true;
     }
 }
 
-// Affiche un caractére en x, y
-void drawCar(int sx, int sy, int num, uint8_t *font, int fw, int fh, int color) {
-  byte row;
-  for(int y=0; y<fh; y++) {
-    for(int x=0; x<(fw/8); x++) {
-      row = pgm_read_byte_near(font+x+y*(fw/8)+(fw/8)*fh*num);
-      for(int i=0;i<8;i++) {
-        if (bitRead(row, 7-i) == 1) display.drawPixel(sx+(x*8)+i, sy+y, color);
-      }
-    }
-  }
-}
 
-// Affiche un gros caractére en x, y
-void drawBigCar(int sx, int sy, int num) {
-  drawCar(sx, sy, num, Font24x40, 24, 40, WHITE) ;
-}
 
-void drawDot(int sx, int sy, int h) {
-  display.fillRect(sx, sy-h, h, h, WHITE);
-}
-
-// Affiche un symbole en x, y
-void drawSymbol(int sx, int sy, int num) {
-  drawCar(sx, sy, num, Symbol, 16, 16, WHITE) ;
-}
-
-// Affiche un nombre decimal
-void drawFloatValue(int sx, int sy, double val, int unit) {
-  char charBuf[15];
-if (val < 0){
-val=-val;
- display.fillRect(0, 39, 12, 6, WHITE);
-// drawDot(0, 39, 12);
-}
-  
-  if (val < 10000) { // TODO : et sinon??
-    dtostrf(val, 3, 1, charBuf); 
-    int nbCar = strlen(charBuf);
-    if (nbCar > 5) { // pas de decimal
-      for (int n=0; n<4; n++){
-        drawBigCar(sx+n*26, sy, charBuf[n]- '0');
-      }
-      if(unit != NO_SYMBOL){
-        drawSymbol(108,sy, unit);
-      }
-    }
-    else {
-      drawBigCar(sx+86, sy, charBuf[nbCar-1]- '0');
-        drawDot(78, sy+39, 6);
-        nbCar--;
-        if (--nbCar > 0) drawBigCar(sx+52, sy, charBuf[nbCar-1]- '0');
-        if (--nbCar > 0) drawBigCar(sx+26, sy, charBuf[nbCar-1]- '0');
-        if (--nbCar > 0) drawBigCar(sx, sy, charBuf[nbCar-1]- '0');
-      if(unit != NO_SYMBOL){
-        drawSymbol(112,sy, unit);
-      }
-    }
-  }
-}
 
 
 
