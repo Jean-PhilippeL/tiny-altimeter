@@ -88,10 +88,18 @@ void setup()   {
      display.display();
 
   if (pressure.begin()) {
-     display.println(F("Pressure sensor OK:"));
+     display.println(F("Pressure sensor init"));
      display.display();
-    updatePressureAndTemperature();
-    savedQnhAltitude = altitude;
+
+      for (int i =0; i<MAX_SAMPLES; i++) {
+        display.print("#");
+        display.display();
+        updatePressureAndTemperature();
+        delay(50); 
+      }
+    
+     
+     savedQnhAltitude = altitude;
   }else {
     display.println(F("fail"));
     display.display();
