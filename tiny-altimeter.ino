@@ -16,9 +16,6 @@
 
 #define DHT11_PIN     8
 
-
-
-
 #define CURRENT_ALTITUDE_SCREEN 1
 #define MAX_ALTITUDE_SCREEN 2
 #define MIN_ALTITUDE_SCREEN 3
@@ -37,14 +34,6 @@
 
 Adafruit_SSD1306 display(-1);
 
-
-/* Uncomment this block to use hardware SPI
- #define OLED_DC     6
- #define OLED_CS     7
- #define OLED_RESET  8
- Adafruit_SSD1306 display(OLED_DC, OLED_RESET, OLED_CS);
- */
-
 //extern uint8_t Font24x40[];
 //extern uint8_t Symbol[];
 //extern uint8_t Splash[];
@@ -55,9 +44,10 @@ SFE_BMP180 pressure;
 //Button buttonDown = Button(BUTTON_DOWN_PIN);
 
 boolean settingMode = false;
-double QNH, saveQNH;
+double QNH, savedQNH;
 double temperature, pression, altitude = 0;
-double baseAltitude, saveBaseAltitude = 0;
+//double baseAltitude, saveBaseAltitude = 0;
+double savedQnhAltitude =0;
 double altiMin = 9999.0;
 double altiMax = 0.0;
 double lastValue = 0.0;
@@ -89,10 +79,20 @@ void setup()   {
   if (isnan(QNH)) {
     QNH = 1013.25;
     EEPROM_writeAnything(eepromAddr, QNH);  // QNH standard 
+     
   }
-  saveQNH = QNH;
+  
+  savedQNH = QNH;
+    display.print(F("QNH:"));
+     display.println(QNH);
+     display.display();
 
-  if (!pressure.begin()) {
+  if (pressure.begin()) {
+     display.println(F("Pressure sensor OK:"));
+     display.display();
+    updatePressureAndTemperature();
+    savedQnhAltitude = altitude;
+  }else {
     display.println(F("fail"));
     display.display();
     delay(3000); 
@@ -101,10 +101,19 @@ void setup()   {
   pinMode(BUTTON_UP_PIN, INPUT_PULLUP);
   pinMode(BUTTON_DOWN_PIN, INPUT_PULLUP);
 
+  
+  enableInterrupts();
+//TODO : diminuer luminosité :display.dim(true);
+}
+
+void enableInterrupts(){
   attachInterrupt(digitalPinToInterrupt(BUTTON_UP_PIN), test, FALLING );
   attachInterrupt(digitalPinToInterrupt(BUTTON_DOWN_PIN), test2, FALLING );
+}
 
-//TODO : diminuer luminosité :display.dim(true);
+void disableInterrupts(){
+  detachInterrupt(digitalPinToInterrupt(BUTTON_UP_PIN) );
+  detachInterrupt(digitalPinToInterrupt(BUTTON_DOWN_PIN));
 }
 
 void test(){
@@ -118,7 +127,10 @@ void test2(){
 void loop() {
  
   if(buttonWasPressed){
+       disableInterrupts();
        manageButtons();
+       buttonWasPressed = false;
+       enableInterrupts();
       }
   updatePressureAndTemperature();
   refreshScreen();
@@ -127,13 +139,8 @@ void loop() {
 }
 
 void refreshScreen(){
-   display.invertDisplay(settingMode);
-  /*if (settingMode) {
-    displaySettings();
-  } else {
-    */  
-       displayMainScreen();
-    //}
+   display.invertDisplay(settingMode); 
+   displayMainScreen();
 }
 
 void manageButtons(){
@@ -145,21 +152,22 @@ void manageButtons(){
   while(millis() < milli + 400){
     upPressed |=  !digitalRead(BUTTON_UP_PIN);
     downPressed |= !digitalRead(BUTTON_DOWN_PIN);
+
+    if(upPressed && downPressed){
+        delay(200); // debounce push
+        while(digitalRead(BUTTON_UP_PIN) && digitalRead(BUTTON_UP_PIN)){
+          //wait release
+        }
+        delay(200); // debounce release
+        break;
+    }
+    
   }
    
   // 2 boutons en mm tps
   if(upPressed &&  downPressed){
-        // inverse l'écran pour montrer que la manipulation à été prise en compte
-        display.invertDisplay(true);
-        //delay(500);
-        //display.invertDisplay(false);
-         //  if (screen == MAX_ALTITUDE_SCREEN || screen == MIN_ALTITUDE_SCREEN) {
-          //TODO   resetAltiMinMax();
-          //} else {
-            settingMode = !settingMode;
-          //} 
+        settingMode = !settingMode; 
   }
-  
  
   // appui bref
   if(upPressed && digitalRead(BUTTON_UP_PIN)){
@@ -182,9 +190,6 @@ void manageButtons(){
 
     //TODO : rebond de release
 
-    //TODO : réactiver les interruptions
-
-   buttonWasPressed = false;
 }
 
 
@@ -205,34 +210,24 @@ void showScreen(String label, double value, String unit) {
   display.setTextSize(1);
   display.print(unit);
 
-
-
-//DEB
-
-    display.setCursor(0,55);
-    display.print("Alti : ");
-    display.println(baseAltitude, 0);
-
-//FIN
-
-  
   display.display();  
 }
 
 void displayMainScreen(){
     // init baseAltitude
-    if (baseAltitude == 0) { 
+    /*if (baseAltitude == 0) { 
       baseAltitude = round(altitude);
       saveBaseAltitude = baseAltitude;
     }
     // calculate QNH
-    if (baseAltitude != saveBaseAltitude) {
+   /* if (baseAltitude != saveBaseAltitude) {
       QNH = pressure.sealevel(pression, baseAltitude);
       saveBaseAltitude = baseAltitude;
-    }
+    }*/
     // Save QNH in EEPROM
-    if (QNH != saveQNH) {
-      saveQNH = QNH;
+    if (round(altitude)!=round(savedQnhAltitude) && savedQNH!=QNH) {
+      savedQnhAltitude = altitude;
+      savedQNH = QNH;
       EEPROM_writeAnything(eepromAddr, QNH);
     }
 
@@ -311,22 +306,22 @@ void displayMainScreen(){
   
   char buffer2[6];
 
-    sprintf(buffer2, "%2i", tm.Hour );
+    sprintf(buffer2, "%02i", tm.Hour );
     display.print(buffer2);
     display.setCursor(40,10);
     display.print(":");
     display.setCursor(55,10);
-    sprintf(buffer2, "%2i",tm.Minute );
+    sprintf(buffer2, "%02i",tm.Minute );
     display.print(buffer2);
     display.setTextSize(1);
-    sprintf(buffer2, "%2i",tm.Second );
+    sprintf(buffer2, "%02i",tm.Second );
     display.print(buffer2);
     display.display();  
       break;  
    
     }
 }
-
+/*
 void displaySettings(){
   display.clearDisplay(); 
     //display.setTextSize(1);
@@ -347,7 +342,7 @@ void displaySettings(){
     display.print("Alti : ");
     display.println(baseAltitude, 0);
     display.display();  
-}
+}*/
 
 // Enregistre un echantillon de pression
 void savePressureSample(float pressure) {
@@ -409,9 +404,9 @@ void handleButtonReleaseEvents(boolean up, boolean shortPush) {
     if (settingMode) {
            switch (screen) {
               case CURRENT_ALTITUDE_SCREEN :
-                baseAltitude += (up?1:-1)*(shortPush?1:10);    
+                altitude += (up?1:-1)*(shortPush?1:10);    
                 // recalcule le QNH
-                QNH = pressure.sealevel(pression, baseAltitude);
+                QNH = pressure.sealevel(pression, altitude);
                  updatePressureAndTemperature();
                 break;
           
